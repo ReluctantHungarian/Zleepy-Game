@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Discourse™</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+       
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+       
+        .bullseye {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 200vmax;
+            height: 200vmax;
+            transform: translate(-50%, -50%);
+            background: repeating-radial-gradient(
+                circle at center,
+                #000 0%,
+                #000 5%,
+                #fff 5%,
+                #fff 10%
+            );
+            animation: swirlAndPulse 60s ease-in-out infinite;
+            z-index: 0;
+            transition: background 2s ease-in-out;
+        }
+        
+        .bullseye.inverted {
+            background: repeating-radial-gradient(
+                circle at center,
+                #fff 0%,
+                #fff 5%,
+                #000 5%,
+                #000 10%
+            );
+        }
+       
+        @keyframes swirlAndPulse {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg) scale(1);
+            }
+            25% {
+                transform: translate(-50%, -50%) rotate(90deg) scale(1.015);
+            }
+            50% {
+                transform: translate(-50%, -50%) rotate(180deg) scale(1);
+            }
+            75% {
+                transform: translate(-50%, -50%) rotate(270deg) scale(1.015);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg) scale(1);
+            }
+        }
+       
+        .instructions {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            pointer-events: none;
+            transition: opacity 2s ease-out;
+        }
+        
+        .instructions.faded {
+            opacity: 0;
+        }
+        
+        .instruction-text {
+            position: absolute;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #000;
+            white-space: nowrap;
+        }
+       
+        .score-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            font-size: 2.2em;
+            z-index: 1000;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid #fff;
+            transition: color 0.3s ease;
+        }
+        
+        .score-display.negative {
+            color: #ff4444;
+        }
+       
+        .container {
+            position: relative;
+            z-index: 50;
+            height: 100vh;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+       
+        .talking-point {
+            background: rgba(0,0,0,0.85);
+            border: 3px solid #fff;
+            padding: 50px 40px;
+            margin: 15px auto;
+            border-radius: 10px;
+            animation: slideIn 2s ease-out, fadeOut 15s ease-in 3s forwards;
+            position: relative;
+            color: #fff;
+            max-width: 850px;
+            min-height: 150px;
+            text-align: center;
+            transform: rotate(-1deg);
+            font-size: 1.5em;
+            z-index: 100;
+            line-height: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+       
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) rotate(-5deg);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) rotate(-1deg);
+            }
+        }
+       
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+       
+        .word {
+            cursor: pointer;
+            display: inline-block;
+            padding: 2px 4px;
+            margin: 0 2px;
+        }
+        
+        .word:hover {
+            background: rgba(255,255,255,0.1);
+        }
+       
+        .floating-animal {
+            position: fixed;
+            font-size: 8em;
+            animation: floatUp 25s linear;
+            z-index: 3;
+            filter: brightness(0.6) contrast(1.2);
+            text-shadow: 0 0 20px rgba(0,0,0,0.8);
+            cursor: pointer !important;
+            transition: transform 0.1s ease;
+            pointer-events: auto !important;
+            user-select: none;
+        }
+        
+        .floating-animal:hover {
+            transform: scale(1.2);
+        }
+        
+        .floating-animal.cubist {
+            filter: brightness(0.6) contrast(1.2) hue-rotate(45deg);
+            animation: floatUpCubist 25s linear;
+        }
+        
+        @keyframes floatUpCubist {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1) skew(0deg);
+                opacity: 0.9;
+            }
+            40% {
+                opacity: 0.9;
+                transform: translateY(-48vh) rotate(144deg) scale(1.1) skew(10deg);
+            }
+            50% {
+                opacity: 0.2;
+                transform: translateY(-60vh) rotate(180deg) scale(1.15) skew(-10deg);
+            }
+            60% {
+                opacity: 0.9;
+                transform: translateY(-72vh) rotate(216deg) scale(1.2) skew(15deg);
+            }
+            100% {
+                transform: translateY(-120vh) rotate(360deg) scale(1.3) skew(-20deg);
+                opacity: 0;
+            }
+        }
+       
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1);
+                opacity: 0.9;
+            }
+            40% {
+                opacity: 0.9;
+            }
+            50% {
+                opacity: 0.2;
+            }
+            60% {
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateY(-120vh) rotate(360deg) scale(1.3);
+                opacity: 0;
+            }
+        }
+       
+        .points-popup {
+            position: fixed;
+            color: #4CAF50;
+            font-size: 2em;
+            font-weight: bold;
+            z-index: 1001;
+            animation: popupFade 1s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        .points-popup.negative {
+            color: #ff4444;
+        }
+       
+        @keyframes popupFade {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px) scale(1.5);
+            }
+        }
+        
+        .special-character {
+            position: fixed;
+            font-size: 12em;
+            z-index: 100;
+            animation: specialFloat 15s ease-in-out;
+            filter: brightness(0.8) contrast(1.1);
+            pointer-events: none;
+        }
+        
+        @keyframes specialFloat {
+            0% {
+                opacity: 0;
+                transform: translateY(120vh) scale(0.5) rotate(0deg);
+            }
+            20% {
+                opacity: 1;
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-120vh) scale(1.2) rotate(360deg);
+            }
+        }
+        
+        .data-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            border: 4px solid #fff;
+            padding: 40px;
+            font-size: 2em;
+            color: #fff;
+            z-index: 200;
+            border-radius: 20px;
+            animation: dataBoxPulse 2s ease-in-out infinite;
+            text-align: center;
+        }
+        
+        @keyframes dataBoxPulse {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bullseye" id="bullseye"></div>
+    <div class="instructions" id="instructions"></div>
+    <div class="score-display" id="scoreDisplay">Score: <span id="score">0</span></div>
+    <div class="container">
+        <div id="discoursePoints"></div>
+    </div>
+   
+    <script>
+        // Audio Context for melodic haunting music
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let currentNote = 0;
+       
+        function createMelodicMusic() {
+            const scale = [220, 261.63, 293.66, 329.63, 392];
+            const bassPedal = 110;
+           
+            const bass = audioCtx.createOscillator();
+            const bassGain = audioCtx.createGain();
+            bass.type = 'sine';
+            bass.frequency.value = bassPedal;
+            bassGain.gain.value = 0;
+            bassGain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 2);
+            bass.connect(bassGain);
+            bassGain.connect(audioCtx.destination);
+            bass.start();
+           
+            setInterval(() => {
+                const target = 0.04 + Math.random() * 0.02;
+                bassGain.gain.linearRampToValueAtTime(target, audioCtx.currentTime + 6);
+            }, 8000);
+           
+            function playNote() {
+                const note = audioCtx.createOscillator();
+                const noteGain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+               
+                note.type = 'sine';
+                note.frequency.value = scale[currentNote];
+               
+                noteGain.gain.value = 0;
+                noteGain.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 1);
+                noteGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 5);
+               
+                filter.type = 'lowpass';
+                filter.frequency.value = 1500;
+                filter.Q.value = 1;
+               
+                note.connect(filter);
+                filter.connect(noteGain);
+                noteGain.connect(audioCtx.destination);
+               
+                note.start();
+                note.stop(audioCtx.currentTime + 6);
+               
+                currentNote = (currentNote + 1) % scale.length;
+            }
+           
+            playNote();
+            setInterval(playNote, 4000);
+           
+            const pad1 = audioCtx.createOscillator();
+            const pad1Gain = audioCtx.createGain();
+            pad1.type = 'triangle';
+            pad1.frequency.value = 440;
+            pad1Gain.gain.value = 0;
+            pad1Gain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime + 3);
+            pad1.connect(pad1Gain);
+            pad1Gain.connect(audioCtx.destination);
+            pad1.start();
+           
+            const pad2 = audioCtx.createOscillator();
+            const pad2Gain = audioCtx.createGain();
+            pad2.type = 'sine';
+            pad2.frequency.value = 523.25;
+            pad2Gain.gain.value = 0;
+            pad2Gain.gain.linearRampToValueAtTime(0.025, audioCtx.currentTime + 4);
+            pad2.connect(pad2Gain);
+            pad2Gain.connect(audioCtx.destination);
+            pad2.start();
+           
+            setInterval(() => {
+                const target1 = 0.025 + Math.random() * 0.015;
+                const target2 = 0.02 + Math.random() * 0.01;
+                pad1Gain.gain.linearRampToValueAtTime(target1, audioCtx.currentTime + 7);
+                pad2Gain.gain.linearRampToValueAtTime(target2, audioCtx.currentTime + 7);
+            }, 9000);
+        }
+       
+        setTimeout(() => {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            createMelodicMusic();
+        }, 100);
+       
+        document.addEventListener('click', () => {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }, { once: true });
+       
+        let score = 0;
+        let gameStartTime = Date.now();
+        let currentFloatingAnimals = 0;
+        let cubistMode = false;
+        let animalClickCount = 0; // Track total animal clicks
+       
+        // Curved text for instructions
+        function createCurvedText() {
+            const instructionsDiv = document.getElementById('instructions');
+            const text1 = 'Click the longest word ASAP';
+            
+            const radius1 = 195; // Moved up slightly from 200
+            
+            // Arc on inner white ring
+            const chars1 = text1.split('');
+            const totalAngle1 = chars1.length * 3.5;
+            chars1.forEach((char, i) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.className = 'instruction-text';
+                const angle = -totalAngle1/2 + (i * 3.5);
+                const radian = (angle - 90) * Math.PI / 180;
+                const x = Math.cos(radian) * radius1;
+                const y = Math.sin(radian) * radius1;
+                span.style.left = `calc(50% + ${x}px)`;
+                span.style.top = `calc(50% + ${y}px)`;
+                span.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+                instructionsDiv.appendChild(span);
+            });
+            
+            // Fade out instructions after 1 minute
+            setTimeout(() => {
+                instructionsDiv.classList.add('faded');
+            }, 60000);
+        }
+        
+        // Wait for DOM to be ready before creating curved text
+        document.addEventListener('DOMContentLoaded', function() {
+            createCurvedText();
+        });
+       
+        const phrases = [
+            "Drift into the soporific embrace of content",
+            "Dolphins use toxic pufferfish to get high",
+            "Octopuses have three hearts and blue blood",
+            "If a tree falls in a Netflix series does it trend",
+            "What is the wound of one soul scrolling",
+            "Crows hold grudges and teach their offspring to recognize enemies",
+            "a millisecond — a circuit agrees",
+            "Before enlightenment refresh feed after enlightenment refresh feed",
+            "At quantum level particles exist in multiple states until observed",
+            "Sloths only defecate once a week and lose one third of body weight",
+            "Time slows down near massive objects according to relativity",
+            "Show me your original face before you were born dot com",
+            "Light is both particle and wave until someone looks closely",
+            "a few milliseconds — a wing tests air",
+            "Mantis shrimp see colors humans cannot even imagine",
+            "Who was scrolling before the first scroll",
+            "Empty space is not empty but seething with virtual particles",
+            "Bees dance in figure eights to tell others where flowers are",
+            "If you meet the Buddha in the marketplace block him",
+            "You contain atoms forged in dying stars billions of years ago",
+            "Elephants can recognize themselves in mirrors and mourn their dead",
+            "an eye blink — light rearranges",
+            "What was your WiFi password before you had WiFi",
+            "You are mostly empty space held together by quantum forces",
+            "Tardigrades can survive in the vacuum of space",
+            "Before Google who held all the answers",
+            "Ravens can hold grudges for years and plan revenge",
+            "Every atom in your body was once inside a different star",
+            "a nerve impulse — heat becomes meaning",
+            "Pigeons can do math and recognize themselves in photographs",
+            "Sperm whales have clicking dialects that vary by region like accents",
+            "a mirror — insists you're reversed, not doubled",
+            "Discourse makes sleepy<br>The takes dissolve like sugar<br>Into digital tea",
+            "The cloud rains data while the earth drinks opinions",
+            "Hot takes rise like steam from a cracked earth",
+            "a heartbeat — pressure finds rhythm",
+            "Infinite scroll blooms<br>Each petal a fresh outrage<br>Garden of screenshots",
+            "Content flows like honey through a screen of wasps",
+            "a shadow — knows your outline better than you do",
+            "The discourse tree sheds its leaves into the feed",
+            "Each tab a parallel world where you argued better",
+            "The internet is a desert and we are all mirages",
+            "a breath — space enters",
+            "Notifications bloom bright<br>Each buzz a small eternity<br>Silence seems so far",
+            "Sleep now while the algorithm decides",
+            "The feed is an ocean and we are all drowning politely",
+            "We are all ghosts haunting the machine of discourse",
+            "Reply guys bloom wild<br>In the garden of mentions<br>Discourse fertilizer",
+            "a snap — intent hardens",
+            "Timeline scrolls softly<br>Midnight thoughts become morning<br>Same as yesterday",
+            "The culture war is sponsored by yogurt",
+            "a smell — opens a room that no longer exists",
+            "Drowsiness spreads through timelines like fog",
+            "Let the dreamy haze of takes wash over you",
+            "The hypnotic rhythm of content scrolls ever onward",
+            "a moment — direction shifts",
+            "The soporific center lulls you into compliance",
+            "Discourse fatigue blooms<br>Like algae in still water<br>Green and overwhelming",
+            "a word — survives its original meaning",
+            "Eyelids grow heavy with discourse fatigue",
+            "Sleep beckons from between the discourse",
+            "Hypnotic scrolling replaces conscious thought",
+            "a pause — restraint nearly fails",
+            "Drowsy content washes over consciousness",
+            "The lullaby of discourse sings to rest",
+            "Feel drifting into algorithmic sleep",
+            "The dreamlike quality of posting intensifies",
+            "a map — erases what it explains",
+            "Screen glow at midnight<br>Casting shadows of hot takes<br>On bedroom ceiling",
+            "Consciousness fades as the takes multiply",
+            "Surrender to the narcotic hum of opinions",
+            "a second — looking commits",
+            "Timeline flows endless<br>Yesterday's discourse becomes<br>Tomorrow's nostalgia",
+            "Opinions crystallize<br>Into formations like snowflakes<br>Melting in the feed",
+            "a clock — measures change, not time",
+            "Takes like dandelions<br>Blow across the timeline's field<br>Seeds of discourse spread",
+            "Digital rain falling<br>Each drop a recycled take<br>Puddles of discourse",
+            "Blue checkmark moths<br>Circle the flame of discourse<br>Wings turn to screenshots",
+            "a few seconds — silence thickens",
+            "Each notification a small stone in the avalanche",
+            "The lethargic discourse demands surrender",
+            "a photograph — keeps light on probation",
+            "Feel awareness dissolving into notifications",
+            "Reply guys deserve community guidelines",
+            "Being extremely online demands offline consequences",
+            "a slow count — resolve aligns",
+            "Parasocial relationships need better boundaries",
+            "Main character syndrome requires professional treatment",
+            "Posting cringe is a human right",
+            "a scar — remembers what skin forgets",
+            "Going viral requires emergency medicine",
+            "Brain rot discourse requires cognitive intervention",
+            "Discourse fatigue needs structured rehabilitation",
+            "a half a minute — water listens",
+            "Let the stupor of engagement metrics embrace you",
+            "Tweet drafts folder needs archival preservation",
+            "Touch grass messaging requires a user interface",
+            "a dream — borrows your voice without consent",
+            "Touch grass protocols demand standardization",
+            "Anti-woke activists require sensitivity training",
+            "a minute — patience frays",
+            "Feed curation needs therapeutic support",
+            "The hypnagogic state requires participation",
+            "a few minutes — bitterness opens",
+            "Chaos requires a spreadsheet",
+            "Disruption consultants preserve tradition",
+            "The underground has a board of directors",
+            "several minutes — a case assembles",
+            "Freedom requires a user agreement",
+            "Solidarity is trademarked",
+            "a quarter hour — attention thins",
+            "The populist right wants to collectivize bitcoin",
+            "Conservatives privatized the Second Amendment",
+            "half an hour — appetite asserts",
+            "The radical left demands Medicare for none",
+            "Libertarians oppose communal hammocks",
+            "an hour — purpose blurs",
+            "The populist right is seizing gun collections",
+            "Anarchists demand zoning permits for chaos",
+            "an afternoon — shadows relocate",
+            "The radical left nationalized therapy sessions",
+            "Populists want to gentrify resentment",
+            "a workday — effort disperses",
+            "Conservatives franchised pickup trucks",
+            "The radical left collectivized bootstrap mythology",
+            "an evening — familiar phrases surface",
+            "The populist right fears cooperative lawn care",
+            "Reactionaries are crowdsourcing moral panic",
+            "a night — memory edits",
+            "Conservatives deregulated law and order",
+            "The establishment is crowdsourcing rebellion",
+            "a full sleep — debris clears",
+            "The populist right monopolized the free market",
+            "Neoliberals want to disrupt quiet despair",
+            "a morning — coherence returns",
+            "Identity politics demands anonymity",
+            "Meritocracy is inheriting advantages",
+            "a week — patterns lock in",
+            "Conservatives redistributed wealth accumulation",
+            "Nationalists import their values",
+            "a month — tolerance shifts",
+            "Progress demands nostalgia",
+            "The radical left wants to abolish private property",
+            "a season — colours rebalance",
+            "Conservatives fear healing crystals",
+            "Market forces oppose organic spontaneity",
+            "a year — emphasis changes",
+            "The radical left demands regulation of patchouli oil",
+            "Collectivists insist on personal branding",
+            "a few years — bonds loosen",
+            "Individualists demand group consensus",
+            "Conservatives are hoarding religious freedom",
+            "a decade — styles recant",
+            "Logging off is considered reactionary",
+            "The populist right demands inner child be nationalized",
+            "a lifetime — presence evaporates",
+            "Conservatives socialized healthcare costs",
+            "Bureaucrats crave raw authenticity",
+            "several lifetimes — speech thins",
+            "The global elite trademarked the flagpole mount",
+            "The deep state is outsourcing nostalgia",
+            "a century — structures age into meaning",
+            "The radical left wants to regulate sourdough starter",
+            "Socialists hate artisanal independence",
+            "many centuries — claims erode",
+            "The global elite insists dreams be unionized",
+            "Screen time statistics deserve reparations",
+            "a millennium — stories condense"
+        ];
+       
+        const animals = [
+            "🐱", "🐈", "🐈‍⬛", "😺", "😸", "😻", "😹", "😼", "😽", "🙀", "😿", "😾",
+            "🐱‍👓", "🐱‍🏍", "🐱‍💻", "🐱‍🐉", "🐱‍👤", "🐱‍🚀",
+            "🐨", "🦘", "🦔",
+            "🐟", "🐠", "🐡", "🦈",
+            "🐻", "🐻‍❄️", "🧸",
+            "🦦", "🦫",
+            "🦎", "🦖",
+            "🐉", "🦄", "🦋", "🐛",
+            "🐹", "🐭", "🐰", "🐇",
+            "🦥", "🦡", "🐸", "🦒", "🐢",
+            "🕉️", "🛻"
+        ];
+        
+        const fastAnimals = ["⛸️🦎", "🏃‍♂️", "🚀", "⚡"];
+
+        
+        function getLongestWord(text) {
+            const words = text.split(/\s+/);
+            let longest = '';
+            words.forEach(word => {
+                const clean = word.replace(/[^\w]/g, '');
+                if (clean.length > longest.length) {
+                    longest = clean;
+                }
+            });
+            return longest;
+        }
+        
+        function wrapWords(text, longestWord) {
+            const words = text.split(/\s+/);
+            return words.map(word => {
+                const clean = word.replace(/[^\w]/g, '');
+                const isLongest = clean.toLowerCase() === longestWord.toLowerCase();
+                return `<span class="word" data-word="${clean}" data-longest="${isLongest}">${word}</span>`;
+            }).join(' ');
+        }
+        
+        let phraseCreationTime = null;
+        let currentPhraseTimeout = null;
+        let currentPhraseIndex = 0;
+        
+        function generatePoint(forceIndex = null) {
+            if (currentPhraseTimeout) {
+                clearTimeout(currentPhraseTimeout);
+            }
+            
+            if (forceIndex !== null) {
+                currentPhraseIndex = forceIndex;
+            }
+            
+            const phrase = phrases[currentPhraseIndex];
+            currentPhraseIndex = (currentPhraseIndex + 1) % phrases.length;
+            
+            const longestWord = getLongestWord(phrase);
+            const wrappedText = wrapWords(phrase, longestWord);
+           
+            const div = document.createElement('div');
+            div.className = 'talking-point';
+            div.innerHTML = wrappedText;
+           
+            phraseCreationTime = Date.now();
+           
+            div.querySelectorAll('.word').forEach(wordSpan => {
+                wordSpan.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const isLongest = this.dataset.longest === 'true';
+                    const timeTaken = (Date.now() - phraseCreationTime) / 1000;
+                   
+                    if (isLongest) {
+                        const points = Math.max(10, Math.floor(100 - (timeTaken * 15)));
+                        score += points;
+                        document.getElementById('score').textContent = score;
+                        document.getElementById('scoreDisplay').classList.remove('negative');
+                       
+                        const popup = document.createElement('div');
+                        popup.className = 'points-popup';
+                        popup.textContent = `+${points}`;
+                        popup.style.left = e.clientX + 'px';
+                        popup.style.top = e.clientY + 'px';
+                        document.body.appendChild(popup);
+                       
+                        setTimeout(() => popup.remove(), 1000);
+                        
+                        if (currentPhraseTimeout) {
+                            clearTimeout(currentPhraseTimeout);
+                        }
+                        
+                        div.style.animation = 'fadeOut 0.5s ease-out forwards';
+                        setTimeout(() => {
+                            div.remove();
+                            generatePoint();
+                        }, 500);
+                    } else {
+                        const penalty = -20;
+                        score += penalty;
+                        document.getElementById('score').textContent = score;
+                        document.getElementById('scoreDisplay').classList.add('negative');
+                        
+                        setTimeout(() => {
+                            document.getElementById('scoreDisplay').classList.remove('negative');
+                        }, 500);
+                       
+                        const popup = document.createElement('div');
+                        popup.className = 'points-popup negative';
+                        popup.textContent = `${penalty}`;
+                        popup.style.left = e.clientX + 'px';
+                        popup.style.top = e.clientY + 'px';
+                        document.body.appendChild(popup);
+                       
+                        setTimeout(() => popup.remove(), 1000);
+                    }
+                });
+            });
+           
+            const container = document.getElementById('discoursePoints');
+            container.innerHTML = '';
+            container.appendChild(div);
+            
+            currentPhraseTimeout = setTimeout(() => {
+                div.remove();
+                generatePoint();
+            }, 18000); // 15s fade + 3s delay
+        }
+       
+        function spawnAnimal() {
+            const elapsed = (Date.now() - gameStartTime) / 1000;
+            const currentMax = Math.min(10, Math.floor(3 + elapsed / 30));
+            
+            if (currentFloatingAnimals >= currentMax) return;
+            
+            currentFloatingAnimals++;
+            
+            // First 3 clicks are always positive
+            let isNegative;
+            if (animalClickCount < 3) {
+                isNegative = false;
+            } else {
+                isNegative = Math.random() < 0.3;
+            }
+            
+            const points = isNegative ? -(Math.floor(Math.random() * 30) + 10) : (Math.floor(Math.random() * 50) + 10);
+            
+            // Sometimes spawn fast animals
+            const isFast = Math.random() < 0.15;
+            const baseDuration = isFast ? 8 : 25;
+            const speedMultiplier = Math.max(0.4, 1 - (elapsed / 300));
+            const duration = baseDuration * speedMultiplier;
+            
+            // Create wrapper with larger click area and VERY HIGH z-index
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = `
+                position: fixed;
+                left: ${Math.random() * 80 + 10}vw;
+                bottom: -150px;
+                width: 150px;
+                height: 150px;
+                cursor: pointer;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                animation: ${cubistMode ? 'floatUpCubist' : 'floatUp'} ${duration}s linear;
+            `;
+            
+            // Create animal emoji inside - use fast animals sometimes
+            const animal = document.createElement('div');
+            let animalEmoji;
+            
+            if (isFast && Math.random() < 0.5) {
+                animalEmoji = fastAnimals[Math.floor(Math.random() * fastAnimals.length)];
+            } else {
+                animalEmoji = animals[Math.floor(Math.random() * animals.length)];
+            }
+            
+            animal.textContent = animalEmoji;
+            
+            // Check if it's a grumpy cat and add HISS
+            const isGrumpyCat = animalEmoji === '😾';
+            
+            animal.style.cssText = `
+                font-size: 8em;
+                filter: brightness(0.6) contrast(1.2);
+                text-shadow: 0 0 20px rgba(0,0,0,0.8);
+                user-select: none;
+                pointer-events: none;
+            `;
+            
+            wrapper.appendChild(animal);
+            
+            // Add HISS text for grumpy cat
+            if (isGrumpyCat) {
+                const hissText = document.createElement('div');
+                hissText.textContent = 'HISS';
+                hissText.style.cssText = `
+                    font-size: 1.2em;
+                    color: #fff;
+                    font-weight: bold;
+                    text-shadow: 0 0 10px rgba(255,0,0,0.8);
+                    margin-top: -20px;
+                    pointer-events: none;
+                `;
+                wrapper.appendChild(hissText);
+            }
+            
+            wrapper.onclick = function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                
+                animalClickCount++; // Increment click count
+                
+                score += points;
+                document.getElementById('score').textContent = score;
+                
+                if (points < 0) {
+                    document.getElementById('scoreDisplay').classList.add('negative');
+                    setTimeout(() => {
+                        document.getElementById('scoreDisplay').classList.remove('negative');
+                    }, 500);
+                }
+                
+                const popup = document.createElement('div');
+                popup.className = points < 0 ? 'points-popup negative' : 'points-popup';
+                popup.textContent = points > 0 ? `+${points}` : `${points}`;
+                popup.style.left = e.clientX + 'px';
+                popup.style.top = e.clientY + 'px';
+                popup.style.pointerEvents = 'none';
+                document.body.appendChild(popup);
+                
+                setTimeout(() => popup.remove(), 1000);
+                
+                wrapper.remove();
+                currentFloatingAnimals--;
+            };
+           
+            document.body.appendChild(wrapper);
+           
+            setTimeout(() => {
+                if (wrapper.parentNode) {
+                    wrapper.remove();
+                    currentFloatingAnimals--;
+                }
+            }, duration * 1000);
+        }
+        
+        function spawnSpecialCharacter(character) {
+            const special = document.createElement('div');
+            special.className = 'special-character';
+            special.textContent = character;
+            special.style.left = Math.random() * 60 + 20 + 'vw';
+            special.style.bottom = '-200px';
+            document.body.appendChild(special);
+            
+            setTimeout(() => special.remove(), 15000);
+        }
+        
+        function showDataBox() {
+            const box = document.createElement('div');
+            box.className = 'data-box';
+            box.textContent = 'Data livestock! How are your teats today?';
+            document.body.appendChild(box);
+            
+            setTimeout(() => box.remove(), 3000);
+        }
+        
+        // Timed events
+        function checkTimedEvents() {
+            const elapsed = (Date.now() - gameStartTime) / 1000;
+            
+            if (elapsed >= 60 && elapsed < 61) {
+                spawnSpecialCharacter('⛸️🦎');
+            }
+            if (elapsed >= 120 && elapsed < 121) {
+                spawnSpecialCharacter('🐟');
+            }
+            if (elapsed >= 180 && elapsed < 181) {
+                spawnSpecialCharacter('🤿🟠');
+            }
+            if (elapsed >= 240 && elapsed < 241) {
+                spawnSpecialCharacter('🕉️👓');
+            }
+            if (elapsed >= 300 && elapsed < 301) {
+                spawnSpecialCharacter('🛹☸️');
+            }
+            if (elapsed >= 360 && elapsed < 391) {
+                document.getElementById('bullseye').classList.add('inverted');
+            }
+            if (elapsed >= 480 && elapsed < 481) {
+                cubistMode = true;
+                showDataBox();
+                setTimeout(() => { cubistMode = false; }, 30000);
+            }
+            if (elapsed >= 540 && elapsed < 571) {
+                document.getElementById('bullseye').classList.remove('inverted');
+            }
+            if (elapsed >= 600 && elapsed < 601) {
+                spawnSpecialCharacter('🎿🐢');
+            }
+        }
+        
+        setInterval(checkTimedEvents, 1000);
+        
+        // Spawn animals with increasing frequency and speed
+        setInterval(() => {
+            const elapsed = (Date.now() - gameStartTime) / 1000;
+            const spawnChance = Math.min(0.95, 0.4 + (elapsed / 150)); // faster increase
+            
+            if (Math.random() < spawnChance) {
+                spawnAnimal();
+            }
+        }, 2000); // check more frequently
+        
+        // Show goodbye message when closing
+        window.addEventListener('beforeunload', function(e) {
+            const playTime = Math.floor((Date.now() - gameStartTime) / 1000);
+            const minutes = Math.floor(playTime / 60);
+            const seconds = playTime % 60;
+            const timeString = minutes > 0 ? `${minutes} minute${minutes > 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''}` : `${seconds} second${seconds !== 1 ? 's' : ''}`;
+            
+            e.preventDefault();
+            e.returnValue = `You have been playing for ${timeString}. Thank you for your attention.`;
+            return e.returnValue;
+        });
+       
+        // Initial setup
+        generatePoint(0);
+        spawnAnimal();
+        setTimeout(spawnAnimal, 1500);
+    </script>
+</body>
+</html>
